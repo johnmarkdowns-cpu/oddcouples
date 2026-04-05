@@ -1,0 +1,39 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("POSTGRES_PRISMA_URL")
+  directUrl = env("POSTGRES_URL_NON_POOLING")
+}
+
+model Image {
+  id        String   @id @default(cuid())
+  filename  String
+  url       String
+  label     String?
+  createdAt DateTime @default(now())
+
+  responsesAsImage1 Response[] @relation("Image1")
+  responsesAsImage2 Response[] @relation("Image2")
+}
+
+model Response {
+  id         String   @id @default(cuid())
+  // image1Id is always lexicographically <= image2Id (normalized)
+  image1Id   String
+  image2Id   String
+  movieTitle String
+  tmdbId     Int?
+  tmdbPoster String?
+  createdAt  DateTime @default(now())
+
+  image1 Image @relation("Image1", fields: [image1Id], references: [id], onDelete: Cascade)
+  image2 Image @relation("Image2", fields: [image2Id], references: [id], onDelete: Cascade)
+
+  @@index([image1Id, image2Id])
+}
